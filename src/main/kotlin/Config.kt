@@ -1,0 +1,2 @@
+const val sessionId =
+    "<session>"
