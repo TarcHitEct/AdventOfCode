@@ -35,6 +35,26 @@ fun <T : GraphNode<T>> T.reachability(
     return result
 }
 
+fun <T : GraphNode<T>, I> T.feedForward(
+    allNodes: Collection<T>,
+    input: I,
+    reduce: (List<I>) -> I
+): Map<T, I> {
+    val inboundEdges = allNodes.flatMap { it.edges }.groupBy { it.to }
+    val nodeValues = mutableMapOf<T, I>()
+    nodeValues[this] = input
+    do {
+        val curRoundNodes = allNodes.filter {
+            !nodeValues.containsKey(it)
+                    && inboundEdges[it]?.all { nodeValues.containsKey(it.from) } == true
+        }
+        curRoundNodes.forEach { node ->
+            nodeValues[node] = reduce(inboundEdges[node]!!.map { nodeValues.getValue(it.from) })
+        }
+    } while (curRoundNodes.isNotEmpty())
+    return nodeValues
+}
+
 fun <T : GraphNode<T>> T.traverse(
     result: TraverseResult<T> = TraverseResult(),
     path: List<T> = emptyList(),
